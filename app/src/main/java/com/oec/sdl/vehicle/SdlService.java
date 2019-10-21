@@ -7,6 +7,10 @@ import android.app.NotificationManager;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
@@ -32,6 +36,7 @@ import com.smartdevicelink.proxy.rpc.enums.FileType;
 import com.smartdevicelink.proxy.rpc.enums.HMILevel;
 import com.smartdevicelink.proxy.rpc.enums.PRNDL;
 import com.smartdevicelink.proxy.rpc.enums.SystemCapabilityType;
+import com.smartdevicelink.proxy.rpc.enums.VehicleDataEventStatus;
 import com.smartdevicelink.proxy.rpc.listeners.OnRPCNotificationListener;
 import com.smartdevicelink.proxy.rpc.listeners.OnRPCResponseListener;
 import com.smartdevicelink.transport.BaseTransportConfig;
@@ -40,24 +45,25 @@ import com.smartdevicelink.transport.TCPTransportConfig;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Vector;
 
 public class SdlService extends Service {
 
-	private static final String TAG 					= "SDL Service";
+	private static final String TAG 					= "SDL Vehicle";
 
-	private static final String APP_NAME 				= "SDL Display";
-	private static final String APP_ID 					= "8678309";
+	private static final String APP_NAME 				= "SDL Vehicle";
+	private static final String APP_ID 					= "014003";
 
 	private static final String ICON_FILENAME 			= "hello_sdl_icon.png";
 
-	private static final int FOREGROUND_SERVICE_ID = 111;
+	private static final int FOREGROUND_SERVICE_ID = 113;
 
 	// TCP/IP transport config
 	// The default port is 12345
 	// The IP is of the machine that is running SDL Core
-	private static final int TCP_PORT = 10662;
+	private int TCP_PORT = 0;
 	private static final String DEV_MACHINE_IP_ADDRESS = "m.sdl.tools";
 
 	// variable to create and call functions of the SyncProxy
@@ -65,6 +71,9 @@ public class SdlService extends Service {
 
 	@Override
 	public IBinder onBind(Intent intent) {
+		int result = intent.getIntExtra( "port", 0 );
+		Log.d("onBind",String.valueOf(result));
+		TCP_PORT = result;
 		return null;
 	}
 
@@ -77,6 +86,7 @@ public class SdlService extends Service {
 			enterForeground();
 		}
 	}
+
 
 	// Helper method to let the service enter foreground mode
 	@SuppressLint("NewApi")
@@ -97,6 +107,9 @@ public class SdlService extends Service {
 
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
+		int result = intent.getIntExtra( "port", 0 );
+		Log.d("onStartCommand",String.valueOf(result));
+		TCP_PORT = result;
 		startProxy();
 		return START_STICKY;
 	}
@@ -167,7 +180,7 @@ public class SdlService extends Service {
 							}
 						}
 					});
-
+					https://github.com/tanaka3/SDLDisplaySampleProjection/tree/SDLBootCamp_googlemap_version
                     //これをすると定期的にデータが取得可能
                     sdlManager.addOnRPCNotificationListener(FunctionID.ON_VEHICLE_DATA, new OnRPCNotificationListener() {
                         @Override
@@ -180,35 +193,13 @@ public class SdlService extends Service {
 
                             //回転数が3000以上か、以下で画像を切り替える
                             Integer rpm = onVehicleDataNotification.getRpm();
-                            if(rpm != null) {
-                                if (rpm > 3000) {
-                                    if (sdlManager.getScreenManager().getPrimaryGraphic().getResourceId() != R.drawable.oldman) {
-                                        artwork = new SdlArtwork("oldman.png", FileType.GRAPHIC_PNG, R.drawable.oldman, true);
-                                    }
-                                } else {
-                                    if (sdlManager.getScreenManager().getPrimaryGraphic().getResourceId() != R.drawable.oldman) {
-                                        artwork = new SdlArtwork("clap.png", FileType.GRAPHIC_PNG, R.drawable.clap, true);
-                                    }
-                                }
-                                if (artwork != null) {
-                                    sdlManager.getScreenManager().setPrimaryGraphic(artwork);
-                                }
-                            }
+							VehicleDataEventStatus eventStatus = onVehicleDataNotification.getDriverBraking();
 
-                            //テキストを登録する場合
-                            sdlManager.getScreenManager().setTextField1("RPM: " + onVehicleDataNotification.getRpm());
-
-
-                            PRNDL prndl = onVehicleDataNotification.getPrndl();
-                            if (prndl != null) {
-                                sdlManager.getScreenManager().setTextField2("ParkBrake: " + prndl.toString());
-
-                                //パーキングブレーキの状態が変わった時だけSpeedを受信させる
-                                if(beforePrndl != prndl){
-                                    beforePrndl = prndl;
-                                    setOnTimeSpeedResponse();
-                                }
-                            }
+							Log.w("eventStatus.name()",eventStatus.name());
+							//テキストを登録する場合
+							sdlManager.getScreenManager().setTextField1("RPM: " + onVehicleDataNotification.getRpm());
+							//テキストを登録する場合
+							sdlManager.getScreenManager().setTextField2("Brake: " + eventStatus.name());
 
                             sdlManager.getScreenManager().commit(new CompletionListener() {
                                 @Override
@@ -263,47 +254,7 @@ public class SdlService extends Service {
 		}
 	}
 
-    /**
-     * 一度だけの情報受信
-     */
-	private void setOnTimeSpeedResponse(){
 
-        GetVehicleData vdRequest = new GetVehicleData();
-        vdRequest.setSpeed(true);
-        vdRequest.setOnRPCResponseListener(new OnRPCResponseListener() {
-            @Override
-            public void onResponse(int correlationId, RPCResponse response) {
-                if(response.getSuccess()){
-                    Double speed = ((GetVehicleDataResponse) response).getSpeed();
-                    changeSpeedTextField(speed);
-
-                }else{
-                    Log.i("SdlService", "GetVehicleData was rejected.");
-                }
-            }
-        });
-        sdlManager.sendRPC(vdRequest);
-    }
-
-    /**
-     * Speed情報の往診
-     * @param speed
-     */
-	private void changeSpeedTextField(double speed){
-        sdlManager.getScreenManager().beginTransaction();
-
-        //テキストを登録する場合
-        sdlManager.getScreenManager().setTextField3("Speed: " + speed);
-
-        sdlManager.getScreenManager().commit(new CompletionListener() {
-            @Override
-            public void onComplete(boolean success) {
-                if (success) {
-                    Log.i(TAG, "change successful");
-                }
-            }
-        });
-    }
 
 	/**
 	 * 利用可能なテンプレートをチェックする
@@ -328,8 +279,7 @@ public class SdlService extends Service {
         //チェックを行う項目
         List<String> keys = new ArrayList<>();
         keys.add(GetVehicleData.KEY_RPM);
-        keys.add(GetVehicleData.KEY_SPEED);
-        keys.add(GetVehicleData.KEY_PRNDL);
+        keys.add(GetVehicleData.KEY_DRIVER_BRAKING);
         permissionElements.add(new PermissionElement(FunctionID.GET_VEHICLE_DATA, keys));
 
         Map<FunctionID, PermissionStatus> status = sdlManager.getPermissionManager().getStatusOfPermissions(permissionElements);
@@ -351,11 +301,10 @@ public class SdlService extends Service {
 
         //テキストを登録する場合
         sdlManager.getScreenManager().setTextField1("RPM: None");
-        sdlManager.getScreenManager().setTextField2("ParkBrake: None");
-        sdlManager.getScreenManager().setTextField3("Speed: None");
+        sdlManager.getScreenManager().setTextField2("Brake: None");
 
         //画像を登録する
-        SdlArtwork artwork = new SdlArtwork("clap.png", FileType.GRAPHIC_PNG, R.drawable.clap, true);
+        SdlArtwork artwork = new SdlArtwork("nomal.png", FileType.GRAPHIC_PNG, R.drawable.nomal, true);
 
         sdlManager.getScreenManager().setPrimaryGraphic(artwork);
         sdlManager.getScreenManager().commit(new CompletionListener() {
@@ -365,7 +314,7 @@ public class SdlService extends Service {
                     //定期受信用のデータを設定する
                     SubscribeVehicleData subscribeRequest = new SubscribeVehicleData();
                     subscribeRequest.setRpm(true);                          //エンジン回転数
-                    subscribeRequest.setPrndl(true);                        //シフトレーバの状態
+                    subscribeRequest.setDriverBraking(true);
                     subscribeRequest.setOnRPCResponseListener(new OnRPCResponseListener() {
                         @Override
                         public void onResponse(int correlationId, RPCResponse response) {
@@ -382,5 +331,6 @@ public class SdlService extends Service {
             }
 		});
 	}
+
 
 }

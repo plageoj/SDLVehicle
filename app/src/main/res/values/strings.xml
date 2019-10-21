@@ -1,3 +1,4 @@
 <resources>
-    <string name="app_name">SDL車両データ表示サンプル</string>
+    <string name="app_name">(改)SDL車両データ表示サンプル</string>
+    <string name="port">PORT</string>
 </resources>
