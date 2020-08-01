@@ -195,11 +195,16 @@ public class SdlService extends Service {
                             Integer rpm = onVehicleDataNotification.getRpm();
 							VehicleDataEventStatus eventStatus = onVehicleDataNotification.getDriverBraking();
 
-							Log.w("eventStatus.name()",eventStatus.name());
-							//テキストを登録する場合
-							sdlManager.getScreenManager().setTextField1("RPM: " + onVehicleDataNotification.getRpm());
-							//テキストを登録する場合
-							sdlManager.getScreenManager().setTextField2("Brake: " + eventStatus.name());
+							if (eventStatus != null) {
+								Log.w("eventStatus.name()",eventStatus.name());
+								
+								//テキストを登録する場合
+								sdlManager.getScreenManager().setTextField2("Brake: " + eventStatus.name());
+							}
+							if (rpm != null) {
+								//テキストを登録する場合
+								sdlManager.getScreenManager().setTextField1("RPM: " + rpm);
+							}
 
                             sdlManager.getScreenManager().commit(new CompletionListener() {
                                 @Override
