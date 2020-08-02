@@ -1,11 +1,12 @@
 <component name="libraryTable">
   <library name="Gradle: com.smartdevicelink:sdl_android:4.9.1@aar">
     <ANNOTATIONS>
-      <root url="jar://$USER_HOME$/.gradle/caches/transforms-2/files-2.1/77b36e9909ddeb1971a4e770e1047ee2/sdl_android-4.9.1/annotations.zip!/" />
+      <root url="jar://$USER_HOME$/.gradle/caches/transforms-2/files-2.1/38e0032443472626c050408590ec65e3/sdl_android-4.9.1/annotations.zip!/" />
     </ANNOTATIONS>
     <CLASSES>
-      <root url="jar://$USER_HOME$/.gradle/caches/transforms-2/files-2.1/77b36e9909ddeb1971a4e770e1047ee2/sdl_android-4.9.1/jars/classes.jar!/" />
-      <root url="file://$USER_HOME$/.gradle/caches/transforms-2/files-2.1/77b36e9909ddeb1971a4e770e1047ee2/sdl_android-4.9.1/res" />
+      <root url="file://$USER_HOME$/.gradle/caches/transforms-2/files-2.1/38e0032443472626c050408590ec65e3/sdl_android-4.9.1/AndroidManifest.xml" />
+      <root url="jar://$USER_HOME$/.gradle/caches/transforms-2/files-2.1/38e0032443472626c050408590ec65e3/sdl_android-4.9.1/jars/classes.jar!/" />
+      <root url="file://$USER_HOME$/.gradle/caches/transforms-2/files-2.1/38e0032443472626c050408590ec65e3/sdl_android-4.9.1/res" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>

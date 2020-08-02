@@ -1,5 +1,6 @@
 package com.oec.sdl.vehicle;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.hardware.Sensor;
@@ -12,6 +13,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import java.util.Locale;
 
@@ -19,6 +21,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     private EditText editText;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -32,32 +35,36 @@ public class MainActivity extends AppCompatActivity {
                 String port = editText.getText().toString();
 
                 //If we are connected to a module we want to start our SdlService
-                if(BuildConfig.TRANSPORT.equals("MULTI") || BuildConfig.TRANSPORT.equals("MULTI_HB")) {
+                if (BuildConfig.TRANSPORT.equals("MULTI") || BuildConfig.TRANSPORT.equals("MULTI_HB")) {
                     //SdlReceiver.queryForConnectedService(this);
                     Intent sdlServiceIntent = new Intent(getApplication(), SdlService.class); // used for TCP
-                    Log.w("sdlServiceIntent",port);
-                    sdlServiceIntent.putExtra("port", Integer.parseInt(port) );
+                    Log.w("sdlServiceIntent", port);
+                    sdlServiceIntent.putExtra("port", Integer.parseInt(port));
                     startService(sdlServiceIntent);
-                }else if(BuildConfig.TRANSPORT.equals("TCP")) {
+                } else if (BuildConfig.TRANSPORT.equals("TCP")) {
                     Intent proxyIntent = new Intent(getApplication(), SdlService.class);
-                    Log.w("intent",port);
-                    proxyIntent.putExtra("port", Integer.parseInt(port) );
+                    Log.w("intent", port);
+                    proxyIntent.putExtra("port", Integer.parseInt(port));
                     startService(proxyIntent);
                 }
+
+                Intent intent2 = new Intent(MainActivity.this, MainActivity2.class);
+                startActivity(intent2);
             }
         });
 
     }
+
     @Override
     protected void onResume() {
         super.onResume();
 
     }
+
     @Override
     protected void onPause() {
         super.onPause();
     }
-
 
 
 }

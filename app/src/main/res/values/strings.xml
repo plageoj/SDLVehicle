@@ -1,4 +1,11 @@
 <resources>
     <string name="app_name">(改)SDL車両データ表示サンプル</string>
     <string name="port">PORT</string>
+    <string name="Enter">Enter ></string>
+    <string name="password">Password</string>
+    <string name="email">Email</string>
+    <string name="degree">Deg.</string>
+    <string name="speed">km/h</string>
+    <string name="score">Pts.</string>
+    <string name="raffle">Raffle</string>
 </resources>
